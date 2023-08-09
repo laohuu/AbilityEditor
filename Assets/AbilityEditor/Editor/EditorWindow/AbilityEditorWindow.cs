@@ -28,6 +28,7 @@ public class AbilityEditorWindow : EditorWindow
         root.Add(labelFromUXML);
 
         InitTopMenu();
+        InitTimerShaft();
     }
 
     #region TopMenu
@@ -137,6 +138,8 @@ public class AbilityEditorWindow : EditorWindow
         get => m_SkillConfig;
     }
 
+    private SkillEditorConfig skillEditorConfig = new SkillEditorConfig();
+
     public void SaveConfig()
     {
         if (m_SkillConfig != null)
@@ -160,6 +163,10 @@ public class AbilityEditorWindow : EditorWindow
 
     #region TimerShaft
 
+    private IMGUIContainer timerShaft;
+    private IMGUIContainer selectLine;
+    private VisualElement contentContainer;
+    private VisualElement contentViewPort;
     private int m_CurrentSelectFrameIndex = -1;
 
     private int CurrentSelectFrameIndex
@@ -179,6 +186,44 @@ public class AbilityEditorWindow : EditorWindow
     {
         get => m_CurrentFrameCount;
         set { m_CurrentFrameCount = value; }
+    }
+
+    private void InitTimerShaft()
+    {
+        ScrollView MainContentView = rootVisualElement.Q<ScrollView>("MainContentView");
+        contentContainer = MainContentView.Q<VisualElement>("unity-content-container");
+        contentViewPort = MainContentView.Q<VisualElement>("unity-content-viewport");
+
+        timerShaft = rootVisualElement.Q<IMGUIContainer>("TimerShaft");
+        timerShaft.onGUIHandler = DrawTimerShaft;
+    }
+
+    private void DrawTimerShaft()
+    {
+        Handles.BeginGUI();
+        Handles.color = Color.white;
+        Rect rect = timerShaft.contentRect;
+        // 起始索引
+        int index = 0;
+
+        int tickStep = 5;
+        for (int i = 0; i < rect.width; i += 10)
+        {
+            if (index % tickStep == 0)
+            {
+                Handles.DrawLine(new Vector3(i, rect.height - 10), new Vector3(i, rect.height));
+                string indexStr = index.ToString();
+                GUI.Label(new Rect(i - indexStr.Length * 4.5f, 0, 35, 20), indexStr);
+            }
+            else
+            {
+                Handles.DrawLine(new Vector3(i, rect.height - 5), new Vector3(i, rect.height));
+            }
+
+            index += 1;
+        }
+
+        Handles.EndGUI();
     }
 
     #endregion

@@ -5,5 +5,26 @@
         <uie:ObjectField label="Character" name="PreviewCharacter" allow-scene-objects="false" type="UnityEngine.GameObject, UnityEngine.CoreModule" style="align-items: center; margin-left: 20px; justify-content: flex-start; align-self: auto; flex-grow: 1; flex-shrink: 1;" />
         <uie:ObjectField label="Skill Config" name="SkillConfigObjectField" type="SkillConfig, Assembly-CSharp" allow-scene-objects="false" style="align-items: center; margin-left: 20px; justify-content: flex-start; align-self: auto; flex-grow: 1; flex-shrink: 1;" />
     </ui:VisualElement>
-    <ui:VisualElement name="Content" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0);" />
+    <ui:VisualElement name="Content" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+        <ui:VisualElement name="Left" style="flex-grow: 0; background-color: rgba(0, 0, 0, 0); min-width: 200px; width: 200px; border-right-width: 0.125px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);">
+            <ui:VisualElement name="Controller" style="height: 30px; border-bottom-width: 0.5px; border-bottom-color: rgb(32, 32, 32); flex-direction: row; flex-shrink: 0;">
+                <ui:VisualElement name="PlayController" style="flex-direction: row;">
+                    <ui:Button text="&lt;" display-tooltip-when-elided="true" name="PreviouFrameButton" style="font-size: 15px; -unity-font-style: normal;" />
+                    <ui:Button text="▶" display-tooltip-when-elided="true" name="PlayButton" style="font-size: 10px;" />
+                    <ui:Button text="&gt;" display-tooltip-when-elided="true" name="NextFrameButton" style="font-size: 15px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="FramerController" style="flex-direction: row; flex-shrink: 0; flex-grow: 1; justify-content: flex-end; align-items: center;">
+                    <uie:IntegerField value="0" name="CurrentFrameField" style="width: 40px;" />
+                    <ui:Label text="/" display-tooltip-when-elided="true" style="font-size: 15px;" />
+                    <uie:IntegerField value="0" name="FrameCountField" style="width: 40px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Right" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); min-width: auto;">
+            <ui:IMGUIContainer name="TimerShaft" style="flex-grow: 0; height: 30px; max-height: 30px; min-height: 30px; width: auto;" />
+            <ui:ScrollView name="MainContentView" mode="VerticalAndHorizontal" horizontal-scroller-visibility="AlwaysVisible" vertical-scroller-visibility="AlwaysVisible">
+                <ui:VisualElement name="ContentListView" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); min-height: 1000px;" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
 </ui:UXML>
