@@ -27,6 +27,15 @@ public class AbilityEditorWindow : EditorWindow
         VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
         root.Add(labelFromUXML);
 
+        if (m_SkillConfig)
+        {
+            CurrentFrameCount = m_SkillConfig.FrameCount;
+        }
+        else
+        {
+            CurrentFrameCount = 100;
+        }
+
         InitTopMenu();
         InitTimerShaft();
     }
@@ -177,6 +186,7 @@ public class AbilityEditorWindow : EditorWindow
             // 如果超出范围，更新最大帧
             if (value > CurrentFrameCount) CurrentFrameCount = value;
             currentSelectFrameIndex = Mathf.Clamp(value, 0, CurrentFrameCount);
+            UpdateTimerShaftView();
         }
     }
 
@@ -185,7 +195,15 @@ public class AbilityEditorWindow : EditorWindow
     public int CurrentFrameCount
     {
         get => m_CurrentFrameCount;
-        set { m_CurrentFrameCount = value; }
+        set
+        {
+            m_CurrentFrameCount = value;
+            // 同步给SkillConfig
+            if (m_SkillConfig != null)
+            {
+                m_SkillConfig.FrameCount = m_CurrentFrameCount;
+            }
+        }
     }
 
 
@@ -211,6 +229,14 @@ public class AbilityEditorWindow : EditorWindow
         timerShaft = rootVisualElement.Q<IMGUIContainer>("TimerShaft");
         timerShaft.onGUIHandler = DrawTimerShaft;
         timerShaft.RegisterCallback<WheelEvent>(TimerShaftWheel);
+        timerShaft.RegisterCallback<MouseDownEvent>(TimerShaftMouseDown);
+        timerShaft.RegisterCallback<MouseMoveEvent>(TimerShaftMouseMove);
+        timerShaft.RegisterCallback<MouseUpEvent>(TimerShaftMouseUp);
+        timerShaft.RegisterCallback<MouseOutEvent>(TimerShaftMouseOut);
+
+
+        selectLine = rootVisualElement.Q<IMGUIContainer>("SelectLine");
+        selectLine.onGUIHandler = DrawSelectLine;
     }
 
     private void DrawTimerShaft()
@@ -250,6 +276,20 @@ public class AbilityEditorWindow : EditorWindow
         Handles.EndGUI();
     }
 
+    private void DrawSelectLine()
+    {
+        // 判断当前选中帧是否在视图范围内
+        if (!(currentSlectFramePos >= contentOffsetPos)) return;
+        Handles.BeginGUI();
+        
+        Handles.color = Color.white;
+        float x = currentSlectFramePos - contentOffsetPos;
+        Handles.DrawLine(new Vector3(x, 0),
+            new Vector3(x, contentViewPort.contentRect.height + timerShaft.contentRect.height));
+        
+        Handles.EndGUI();
+    }
+
     private void TimerShaftWheel(WheelEvent evt)
     {
         int delta = (int)evt.delta.y;
@@ -259,9 +299,116 @@ public class AbilityEditorWindow : EditorWindow
         UpdateTimerShaftView();
     }
 
+    private void TimerShaftMouseDown(MouseDownEvent evt)
+    {
+        // 让选中线得位置卡在帧的位置上
+        timerShaftIsMouseEnter = true;
+        IsPlaying = false;
+        int newValue = GetFrameIndexByMousePos(evt.localMousePosition.x);
+        if (newValue != CurrentSelectFrameIndex)
+        {
+            CurrentSelectFrameIndex = newValue;
+        }
+    }
+
+    private void TimerShaftMouseMove(MouseMoveEvent evt)
+    {
+        if (timerShaftIsMouseEnter)
+        {
+            int newValue = GetFrameIndexByMousePos(evt.localMousePosition.x);
+            if (newValue != CurrentSelectFrameIndex)
+            {
+                CurrentSelectFrameIndex = newValue;
+            }
+        }
+    }
+
+    private void TimerShaftMouseUp(MouseUpEvent evt)
+    {
+        timerShaftIsMouseEnter = false;
+    }
+
+    private void TimerShaftMouseOut(MouseOutEvent evt)
+    {
+        timerShaftIsMouseEnter = false;
+    }
+
+
+    /// <summary>
+    /// 根据鼠标坐标获取帧索引
+    /// </summary>
+    private int GetFrameIndexByMousePos(float x)
+    {
+        return GetFrameIndexByPos(x + contentOffsetPos);
+    }
+
+    public int GetFrameIndexByPos(float x)
+    {
+        return Mathf.RoundToInt(x / skillEditorConfig.frameUnitWidth);
+    }
+
     private void UpdateTimerShaftView()
     {
-        timerShaft.MarkDirtyLayout(); // 标志为需要重新绘制的
+        // 标志为需要重新绘制的
+        timerShaft.MarkDirtyLayout();
+        selectLine.MarkDirtyLayout();
+    }
+
+    #endregion
+
+    #region Preview
+
+    private bool isPlaying;
+
+    public bool IsPlaying
+    {
+        get => isPlaying;
+        set
+        {
+            isPlaying = value;
+            if (isPlaying)
+            {
+                startTime = DateTime.Now;
+                startFrameIndex = currentSelectFrameIndex;
+            }
+        }
+    }
+
+    private DateTime startTime;
+    private int startFrameIndex;
+
+    private void Update()
+    {
+        if (IsPlaying)
+        {
+            // 得到时间差
+            float time = (float)DateTime.Now.Subtract(startTime).TotalSeconds;
+
+            // 确定时间轴的帧率
+            float frameRote;
+            if (m_SkillConfig != null) frameRote = m_SkillConfig.FrameRote;
+            else frameRote = skillEditorConfig.defaultFrameRote;
+
+            // 根据时间差计算当前的选中帧
+            CurrentSelectFrameIndex = (int)((time * frameRote) + startFrameIndex);
+            // 到达最后一帧自动暂停
+            if (CurrentSelectFrameIndex == CurrentFrameCount)
+            {
+                IsPlaying = false;
+            }
+        }
+    }
+
+    private void TickSkill()
+    {
+        // 驱动技能表现
+        if (m_SkillConfig != null && m_CurrentPreviewCharacterObj != null)
+        {
+            // for (int i = 0; i < trackList.Count; i++)
+            // {
+            //     trackList[i].TickView(currentSelectFrameIndex);
+            // }
+        }
     }
 
     #endregion
