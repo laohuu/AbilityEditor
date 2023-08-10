@@ -10,6 +10,8 @@ using Object = UnityEngine.Object;
 
 public class AbilityEditorWindow : EditorWindow
 {
+    public static AbilityEditorWindow Instance;
+
     [SerializeField] private VisualTreeAsset m_VisualTreeAsset = default;
 
     [MenuItem("Window/UI Toolkit/AbilityEditorWindow")]
@@ -21,6 +23,8 @@ public class AbilityEditorWindow : EditorWindow
 
     public void CreateGUI()
     {
+        Instance = this;
+
         // Each editor window contains a root VisualElement object
         VisualElement root = rootVisualElement;
 
@@ -509,7 +513,7 @@ public class AbilityEditorWindow : EditorWindow
     {
         InitAnimationTrack();
     }
-    
+
     private void InitAnimationTrack()
     {
         AnimationTrack animationTrack = new AnimationTrack();
