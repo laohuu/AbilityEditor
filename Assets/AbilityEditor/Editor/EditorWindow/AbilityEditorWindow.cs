@@ -133,7 +133,7 @@ public class AbilityEditorWindow : EditorWindow
     {
         m_SkillConfig = evt.newValue as SkillConfig;
         // 刷新轨道
-        // ResetTrack();
+        ResetTrack();
         CurrentSelectFrameIndex = 0;
         if (m_SkillConfig == null)
         {
@@ -169,10 +169,10 @@ public class AbilityEditorWindow : EditorWindow
 
     private void ResetTrackData()
     {
-        // // 重新引用一下数据
+        // 重新引用一下数据
         // for (int i = 0; i < trackList.Count; i++)
         // {
-        //     trackList[i].OnConfigChanged();
+        //     // trackList[i].OnConfigChanged();
         // }
     }
 
@@ -512,6 +512,14 @@ public class AbilityEditorWindow : EditorWindow
     private void InitTrack()
     {
         InitAnimationTrack();
+    }
+
+    private void ResetTrack()
+    {
+        for (int i = 0; i < trackList.Count; i++)
+        {
+            trackList[i].RestView(skillEditorConfig.frameUnitWidth);
+        }
     }
 
     private void InitAnimationTrack()

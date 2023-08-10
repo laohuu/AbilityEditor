@@ -13,7 +13,7 @@ public class SkillConfig : ConfigBase
     [LabelText("帧数上限")] public int FrameCount = 100;
     [LabelText("帧率")] public int FrameRote = 30;
 
-    [NonSerialized, OdinSerialize] public SkillAnimationData SkillAnimationData = new SkillAnimationData();
+    [OdinSerialize] public SkillAnimationData SkillAnimationData = new SkillAnimationData();
 
 #if UNITY_EDITOR
     private static Action skillConfigValidate;
@@ -42,8 +42,7 @@ public class SkillAnimationData
     /// Key:帧数
     /// Value:事件数据
     /// </summary>
-    [NonSerialized, OdinSerialize]
-    public Dictionary<int, SkillAnimationEvent> FrameData = new Dictionary<int, SkillAnimationEvent>();
+    [OdinSerialize] public Dictionary<int, SkillAnimationEvent> FrameData = new Dictionary<int, SkillAnimationEvent>();
 }
 
 

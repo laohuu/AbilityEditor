@@ -19,7 +19,7 @@
                     <uie:IntegerField value="0" name="FrameCountField" style="width: 40px;" />
                 </ui:VisualElement>
             </ui:VisualElement>
-            <ui:ScrollView name="TrackMenuScrollView">
+            <ui:ScrollView name="TrackMenuScrollView" horizontal-scroller-visibility="Hidden" vertical-scroller-visibility="Hidden">
                 <ui:VisualElement name="TrackMenuList" style="width: 100%; height: 100%; padding-left: 4px; flex-grow: 1; min-height: 1000px; min-width: auto;" />
             </ui:ScrollView>
         </ui:VisualElement>
