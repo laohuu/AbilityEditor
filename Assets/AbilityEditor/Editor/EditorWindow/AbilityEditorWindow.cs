@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEditor.UIElements;
@@ -484,7 +485,7 @@ public class AbilityEditorWindow : EditorWindow
     private VisualElement trackMenuParent;
     private VisualElement contentListView;
     private ScrollView mainContentView;
-    // private List<SkillTrackBase> trackList = new List<SkillTrackBase>();
+    private List<SkillTrackBase> trackList = new List<SkillTrackBase>();
 
     private void InitContent()
     {
@@ -498,14 +499,22 @@ public class AbilityEditorWindow : EditorWindow
 
     private void ContentVerticalScorllerValueChanged(float value)
     {
-        // Vector3 pos = trackMenuParent.transform.position;
-        // pos.y = contentContainer.transform.position.y;
-        // trackMenuParent.transform.position = pos;
+        Vector3 pos = trackMenuParent.transform.position;
+        pos.y = contentContainer.transform.position.y;
+        trackMenuParent.transform.position = pos;
     }
 
 
     private void InitTrack()
     {
+        InitAnimationTrack();
+    }
+    
+    private void InitAnimationTrack()
+    {
+        AnimationTrack animationTrack = new AnimationTrack();
+        animationTrack.Init(trackMenuParent, contentListView, skillEditorConfig.frameUnitWidth);
+        trackList.Add(animationTrack);
     }
 
     private void UpdateContentSize()
