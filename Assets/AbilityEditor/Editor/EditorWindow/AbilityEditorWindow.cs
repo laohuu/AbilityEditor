@@ -167,16 +167,16 @@ public class AbilityEditorWindow : EditorWindow
     private IMGUIContainer selectLine;
     private VisualElement contentContainer;
     private VisualElement contentViewPort;
-    private int m_CurrentSelectFrameIndex = -1;
+    private int currentSelectFrameIndex = -1;
 
     private int CurrentSelectFrameIndex
     {
-        get => m_CurrentSelectFrameIndex;
+        get => currentSelectFrameIndex;
         set
         {
             // 如果超出范围，更新最大帧
             if (value > CurrentFrameCount) CurrentFrameCount = value;
-            m_CurrentSelectFrameIndex = Mathf.Clamp(value, 0, CurrentFrameCount);
+            currentSelectFrameIndex = Mathf.Clamp(value, 0, CurrentFrameCount);
         }
     }
 
@@ -188,14 +188,29 @@ public class AbilityEditorWindow : EditorWindow
         set { m_CurrentFrameCount = value; }
     }
 
+
+    // 当前内容区域的偏移坐标
+    private float contentOffsetPos
+    {
+        get => Mathf.Abs(contentContainer.transform.position.x);
+    }
+
+    private float currentSlectFramePos
+    {
+        get => currentSelectFrameIndex * skillEditorConfig.frameUnitWidth;
+    }
+
+    private bool timerShaftIsMouseEnter = false;
+
     private void InitTimerShaft()
     {
-        ScrollView MainContentView = rootVisualElement.Q<ScrollView>("MainContentView");
-        contentContainer = MainContentView.Q<VisualElement>("unity-content-container");
-        contentViewPort = MainContentView.Q<VisualElement>("unity-content-viewport");
+        ScrollView mainContentView = rootVisualElement.Q<ScrollView>("MainContentView");
+        contentContainer = mainContentView.Q<VisualElement>("unity-content-container");
+        contentViewPort = mainContentView.Q<VisualElement>("unity-content-viewport");
 
         timerShaft = rootVisualElement.Q<IMGUIContainer>("TimerShaft");
         timerShaft.onGUIHandler = DrawTimerShaft;
+        timerShaft.RegisterCallback<WheelEvent>(TimerShaftWheel);
     }
 
     private void DrawTimerShaft()
@@ -204,10 +219,19 @@ public class AbilityEditorWindow : EditorWindow
         Handles.color = Color.white;
         Rect rect = timerShaft.contentRect;
         // 起始索引
-        int index = 0;
+        int index = Mathf.CeilToInt(contentOffsetPos / skillEditorConfig.frameUnitWidth);
+        // 计算绘制起点的偏移
+        float startOffset = 0;
+        if (index > 0)
+            startOffset = skillEditorConfig.frameUnitWidth - (contentOffsetPos % skillEditorConfig.frameUnitWidth);
 
-        int tickStep = 5;
-        for (int i = 0; i < rect.width; i += 10)
+        // 步长
+        int tickStep = SkillEditorConfig.maxFrameWidthLV + 1 -
+                       (skillEditorConfig.frameUnitWidth / SkillEditorConfig.standFrameUnitWidth);
+        tickStep = tickStep / 2; // 可能 1 / 2 = 0的情况
+        if (tickStep == 0) tickStep = 1; // 避免为0
+
+        for (float i = startOffset; i < rect.width; i += skillEditorConfig.frameUnitWidth)
         {
             if (index % tickStep == 0)
             {
@@ -224,6 +248,20 @@ public class AbilityEditorWindow : EditorWindow
         }
 
         Handles.EndGUI();
+    }
+
+    private void TimerShaftWheel(WheelEvent evt)
+    {
+        int delta = (int)evt.delta.y;
+        skillEditorConfig.frameUnitWidth = Mathf.Clamp(skillEditorConfig.frameUnitWidth - delta,
+            SkillEditorConfig.standFrameUnitWidth,
+            SkillEditorConfig.maxFrameWidthLV * SkillEditorConfig.standFrameUnitWidth);
+        UpdateTimerShaftView();
+    }
+
+    private void UpdateTimerShaftView()
+    {
+        timerShaft.MarkDirtyLayout(); // 标志为需要重新绘制的
     }
 
     #endregion
