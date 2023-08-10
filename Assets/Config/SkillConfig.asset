@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: SkillConfig
   m_EditorClassIdentifier: 
   SkillName: 
-  FrameCount: 100
+  FrameCount: 400
   FrameRote: 30

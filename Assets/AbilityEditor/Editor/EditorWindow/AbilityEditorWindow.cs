@@ -27,17 +27,20 @@ public class AbilityEditorWindow : EditorWindow
         VisualElement labelFromUXML = m_VisualTreeAsset.Instantiate();
         root.Add(labelFromUXML);
 
+        InitTopMenu();
+        InitConsole();
+        InitTimerShaft();
+        InitContent();
+
         if (m_SkillConfig)
         {
+            m_SkillConfigObjectField.value = m_SkillConfig;
             CurrentFrameCount = m_SkillConfig.FrameCount;
         }
         else
         {
             CurrentFrameCount = 100;
         }
-
-        InitTopMenu();
-        InitTimerShaft();
     }
 
     #region TopMenu
@@ -186,6 +189,7 @@ public class AbilityEditorWindow : EditorWindow
             // 如果超出范围，更新最大帧
             if (value > CurrentFrameCount) CurrentFrameCount = value;
             currentSelectFrameIndex = Mathf.Clamp(value, 0, CurrentFrameCount);
+            CurrentFrameField.value = currentSelectFrameIndex;
             UpdateTimerShaftView();
         }
     }
@@ -198,11 +202,16 @@ public class AbilityEditorWindow : EditorWindow
         set
         {
             m_CurrentFrameCount = value;
+            FrameCountField.value = value;
             // 同步给SkillConfig
             if (m_SkillConfig != null)
             {
                 m_SkillConfig.FrameCount = m_CurrentFrameCount;
+                SaveConfig();
             }
+
+            // Content区域的尺寸变化
+            UpdateContentSize();
         }
     }
 
@@ -281,12 +290,12 @@ public class AbilityEditorWindow : EditorWindow
         // 判断当前选中帧是否在视图范围内
         if (!(currentSlectFramePos >= contentOffsetPos)) return;
         Handles.BeginGUI();
-        
+
         Handles.color = Color.white;
         float x = currentSlectFramePos - contentOffsetPos;
         Handles.DrawLine(new Vector3(x, 0),
             new Vector3(x, contentViewPort.contentRect.height + timerShaft.contentRect.height));
-        
+
         Handles.EndGUI();
     }
 
@@ -297,6 +306,7 @@ public class AbilityEditorWindow : EditorWindow
             SkillEditorConfig.standFrameUnitWidth,
             SkillEditorConfig.maxFrameWidthLV * SkillEditorConfig.standFrameUnitWidth);
         UpdateTimerShaftView();
+        UpdateContentSize();
     }
 
     private void TimerShaftMouseDown(MouseDownEvent evt)
@@ -409,6 +419,98 @@ public class AbilityEditorWindow : EditorWindow
             //     trackList[i].TickView(currentSelectFrameIndex);
             // }
         }
+    }
+
+    #endregion
+
+
+    #region Console
+
+    private Button PreviouFrameButton;
+    private Button PlayButton;
+    private Button NextFrameButton;
+    private IntegerField CurrentFrameField;
+    private IntegerField FrameCountField;
+
+    private void InitConsole()
+    {
+        PreviouFrameButton = rootVisualElement.Q<Button>("PreviouFrameButton");
+        PreviouFrameButton.clicked += PreviouFrameButtonClick;
+
+        PlayButton = rootVisualElement.Q<Button>("PlayButton");
+        PlayButton.clicked += PlayButtonClick;
+
+        NextFrameButton = rootVisualElement.Q<Button>("NextFrameButton");
+        NextFrameButton.clicked += NextFrameButtonClick;
+
+        CurrentFrameField = rootVisualElement.Q<IntegerField>("CurrentFrameField");
+        CurrentFrameField.RegisterValueChangedCallback(CurrentFrameFieldValueChanged);
+
+        FrameCountField = rootVisualElement.Q<IntegerField>("FrameCountField");
+        FrameCountField.RegisterValueChangedCallback(FrameCountValueChanged);
+    }
+
+    private void PreviouFrameButtonClick()
+    {
+        IsPlaying = false;
+        CurrentSelectFrameIndex -= 1;
+    }
+
+    private void PlayButtonClick()
+    {
+        IsPlaying = !IsPlaying;
+    }
+
+    private void NextFrameButtonClick()
+    {
+        IsPlaying = false;
+        CurrentSelectFrameIndex += 1;
+    }
+
+    private void CurrentFrameFieldValueChanged(ChangeEvent<int> evt)
+    {
+        if (CurrentSelectFrameIndex != evt.newValue) CurrentSelectFrameIndex = evt.newValue;
+    }
+
+    private void FrameCountValueChanged(ChangeEvent<int> evt)
+    {
+        if (CurrentFrameCount != evt.newValue) CurrentFrameCount = evt.newValue;
+    }
+
+    #endregion
+
+    #region Track
+
+    private VisualElement trackMenuParent;
+    private VisualElement contentListView;
+    private ScrollView mainContentView;
+    // private List<SkillTrackBase> trackList = new List<SkillTrackBase>();
+
+    private void InitContent()
+    {
+        contentListView = rootVisualElement.Q<VisualElement>("ContentListView");
+        trackMenuParent = rootVisualElement.Q<VisualElement>("TrackMenuList");
+        mainContentView = rootVisualElement.Q<ScrollView>("MainContentView");
+        mainContentView.verticalScroller.valueChanged += ContentVerticalScorllerValueChanged;
+        UpdateContentSize();
+        InitTrack();
+    }
+
+    private void ContentVerticalScorllerValueChanged(float value)
+    {
+        // Vector3 pos = trackMenuParent.transform.position;
+        // pos.y = contentContainer.transform.position.y;
+        // trackMenuParent.transform.position = pos;
+    }
+
+
+    private void InitTrack()
+    {
+    }
+
+    private void UpdateContentSize()
+    {
+        contentListView.style.width = skillEditorConfig.frameUnitWidth * CurrentFrameCount;
     }
 
     #endregion
