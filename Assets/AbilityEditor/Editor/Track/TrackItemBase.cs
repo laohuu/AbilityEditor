@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using AbilityEditor.Editor.Track.Scripts.Style.TrackItem;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -31,11 +32,8 @@ public abstract class TrackItemBase<T> : TrackItemBase where T : SkillTrackBase
     protected T track;
     protected Color normalColor;
     protected Color selectColor;
-    // public SkillTrackItemStyleBase itemStyle { get; protected set; }
-
+    public SkillTrackItemStyleBase itemStyle { get; protected set; }
     protected int frameIndex;
-
-    public Label root { get; protected set; }
 
     public int FrameIndex
     {
@@ -49,11 +47,11 @@ public abstract class TrackItemBase<T> : TrackItemBase where T : SkillTrackBase
 
     public override void OnSelect()
     {
-        root.style.backgroundColor = selectColor;
+        itemStyle.SetBGColor(selectColor);
     }
 
     public override void OnUnSelect()
     {
-        root.style.backgroundColor = normalColor;
+        itemStyle.SetBGColor(normalColor);
     }
 }

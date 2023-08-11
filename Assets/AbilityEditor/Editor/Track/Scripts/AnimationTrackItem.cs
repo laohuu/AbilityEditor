@@ -1,15 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using AbilityEditor.Editor.Track.Scripts.Style.TrackItem;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class AnimationTrackItem : TrackItemBase<AnimationTrack>
 {
-    private const string trackItemAssetPath =
-        "Assets/AbilityEditor/Editor/Track/Assets/AnimationTrack/AnimationTrackItem.uxml";
-
-    private AnimationTrack animationTrack;
     private SkillAnimationEvent animationEvent;
 
     public SkillAnimationEvent AnimationEvent
@@ -17,60 +14,52 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
         get => animationEvent;
     }
 
-    private VisualElement mainDragArea;
-    private VisualElement animationOverLine;
+    private SkillAnimationTrackItemStyle trackItemStyle;
 
-    public void Init(AnimationTrack animationTrack, VisualElement parent, int startFrameIndex, float frameUnitWidth,
-        SkillAnimationEvent animationEvent)
+    public void Init(AnimationTrack animationTrack, SkillTrackStyleBase parentTrackStyle, int startFrameIndex,
+        float frameUnitWidth, SkillAnimationEvent animationEvent)
     {
         this.frameUnitWidth = frameUnitWidth;
         this.frameIndex = startFrameIndex;
-        this.animationTrack = animationTrack;
-        this.animationEvent = animationEvent;
         track = animationTrack;
+        this.animationEvent = animationEvent;
+
+        trackItemStyle = new SkillAnimationTrackItemStyle();
+        itemStyle = trackItemStyle;
+        trackItemStyle.Init(parentTrackStyle, startFrameIndex, frameUnitWidth);
 
         normalColor = new Color(0.388f, 0.850f, 0.905f, 0.5f);
         selectColor = new Color(0.388f, 0.850f, 0.905f, 1f);
-
-        root = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(trackItemAssetPath).Instantiate().Query<Label>();
-        mainDragArea = root.Q<VisualElement>("Main");
-        animationOverLine = root.Q<VisualElement>("OverLline");
-        parent.Add(root);
-
         OnUnSelect();
-
         // 绑定事件
-        mainDragArea.RegisterCallback<MouseDownEvent>(MouseDown);
-        mainDragArea.RegisterCallback<MouseUpEvent>(MouseUp);
-        mainDragArea.RegisterCallback<MouseOutEvent>(MouseOut);
-        mainDragArea.RegisterCallback<MouseMoveEvent>(MouseMove);
-
+        trackItemStyle.mainDragArea.RegisterCallback<MouseDownEvent>(MouseDown);
+        trackItemStyle.mainDragArea.RegisterCallback<MouseUpEvent>(MouseUp);
+        trackItemStyle.mainDragArea.RegisterCallback<MouseOutEvent>(MouseOut);
+        trackItemStyle.mainDragArea.RegisterCallback<MouseMoveEvent>(MouseMove);
         ResetView(frameUnitWidth);
     }
 
     public override void ResetView(float frameUnitWidth)
     {
         this.frameUnitWidth = frameUnitWidth;
-        root.text = animationEvent.AnimationClip.name;
+        trackItemStyle.SetTitle(animationEvent.AnimationClip.name);
         // 位置计算
-        Vector3 mainPos = root.transform.position;
-        mainPos.x = frameIndex * frameUnitWidth;
-        root.transform.position = mainPos;
-        root.style.width = animationEvent.DurationFrame * frameUnitWidth;
+        trackItemStyle.SetPosition(frameIndex * frameUnitWidth);
+        trackItemStyle.SetWidth(animationEvent.DurationFrame * frameUnitWidth);
 
         int animationClipFrameCount =
             (int)(animationEvent.AnimationClip.length * animationEvent.AnimationClip.frameRate);
         // 计算动画结束线的位置
         if (animationClipFrameCount > animationEvent.DurationFrame)
         {
-            animationOverLine.style.display = DisplayStyle.None;
+            trackItemStyle.animationOverLine.style.display = DisplayStyle.None;
         }
         else
         {
-            animationOverLine.style.display = DisplayStyle.Flex;
-            Vector3 overLinePos = animationOverLine.transform.position;
+            trackItemStyle.animationOverLine.style.display = DisplayStyle.Flex;
+            Vector3 overLinePos = trackItemStyle.animationOverLine.transform.position;
             overLinePos.x = animationClipFrameCount * frameUnitWidth - 1; // 线条自身宽度为2
-            animationOverLine.transform.position = overLinePos;
+            trackItemStyle.animationOverLine.transform.position = overLinePos;
         }
     }
 
@@ -102,27 +91,29 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
 
     private void MouseMove(MouseMoveEvent evt)
     {
-        if (!mouseDrag) return;
-        float offsetPos = evt.mousePosition.x - startDargPosX;
-        int offsetFrame = Mathf.RoundToInt(offsetPos / frameUnitWidth);
-        int targetFrameIndex = startDragFrameIndex + offsetFrame;
-        bool checkDrag = false;
-        if (targetFrameIndex < 0) return; // 不考虑拖拽到负数的情况
+        if (mouseDrag)
+        {
+            float offsetPos = evt.mousePosition.x - startDargPosX;
+            int offsetFrame = Mathf.RoundToInt(offsetPos / frameUnitWidth);
+            int targetFrameIndex = startDragFrameIndex + offsetFrame;
+            bool checkDrag = false;
+            if (targetFrameIndex < 0) return; // 不考虑拖拽到负数的情况
+            if (offsetFrame < 0) checkDrag = track.CheckFrameIndexOnDrag(targetFrameIndex, startDragFrameIndex, true);
+            else if (offsetFrame > 0)
+                checkDrag = track.CheckFrameIndexOnDrag(targetFrameIndex + animationEvent.DurationFrame,
+                    startDragFrameIndex, false);
+            else return;
 
-        if (offsetFrame < 0)
-            checkDrag = animationTrack.CheckFrameIndexOnDrag(targetFrameIndex, startDragFrameIndex, true);
-        else if (offsetFrame > 0)
-            checkDrag = animationTrack.CheckFrameIndexOnDrag(targetFrameIndex + animationEvent.DurationFrame,
-                startDragFrameIndex, false);
-        else return;
-
-        if (!checkDrag) return;
-        // 确定修改的数据
-        frameIndex = targetFrameIndex;
-        // 如果超过右侧边界，拓展边界
-        CheckFrameCount();
-        // 刷新视图
-        ResetView(frameUnitWidth);
+            if (checkDrag)
+            {
+                // 确定修改的数据
+                frameIndex = targetFrameIndex;
+                // 如果超过右侧边界，拓展边界
+                CheckFrameCount();
+                // 刷新视图
+                ResetView(frameUnitWidth);
+            }
+        }
     }
 
     public void CheckFrameCount()
@@ -139,15 +130,15 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
     {
         if (startDragFrameIndex != frameIndex)
         {
-            animationTrack.SetFrameIndex(startDragFrameIndex, frameIndex);
+            track.SetFrameIndex(startDragFrameIndex, frameIndex);
             SkillEditorInspector.Instance.SetTrackItemFrameIndex(frameIndex);
         }
     }
+
+    #endregion
 
     public override void OnConfigChanged()
     {
         animationEvent = track.AnimationData.FrameData[frameIndex];
     }
-
-    #endregion
 }

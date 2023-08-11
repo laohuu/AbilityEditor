@@ -1,18 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using AbilityEditor.Editor.Track.Scripts.Style.Track;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 public class AnimationTrack : SkillTrackBase
 {
-    public override string MenuAssetPath =>
-        "Assets/AbilityEditor/Editor/Track/Assets/SinglineTrackStyle/SingleLineTrackMenu.uxml";
-
-    public override string TrackAssetPath =>
-        "Assets/AbilityEditor/Editor/Track/Assets/SinglineTrackStyle/SingleLineTrackContent.uxml";
-
+    private SkillSingleLineTrackStyle trackStyle;
     private Dictionary<int, AnimationTrackItem> trackItemDic = new Dictionary<int, AnimationTrackItem>();
 
     public SkillAnimationData AnimationData
@@ -20,28 +16,30 @@ public class AnimationTrack : SkillTrackBase
         get => AbilityEditorWindow.Instance.SkillConfig.SkillAnimationData;
     }
 
-    public override void Init(VisualElement menuParent, VisualElement trackParent, int frameUnitWidth)
+    public override void Init(VisualElement menuParent, VisualElement trackParent, float frameWdith)
     {
-        base.Init(menuParent, trackParent, frameUnitWidth);
-        track.RegisterCallback<DragUpdatedEvent>(OnDragUpdate);
-        track.RegisterCallback<DragExitedEvent>(DragExited);
+        base.Init(menuParent, trackParent, frameWdith);
+        trackStyle = new SkillSingleLineTrackStyle();
+        trackStyle.Init(menuParent, trackParent, "动画配置");
+        trackStyle.contentRoot.RegisterCallback<DragUpdatedEvent>(OnDragUpdate);
+        trackStyle.contentRoot.RegisterCallback<DragExitedEvent>(DragExited);
         ResetView();
     }
 
     public override void ResetView(float frameWdith)
     {
-        base.ResetView(frameWdith);
+        base.ResetView(frameWidth);
         // 销毁当前已有
         foreach (var item in trackItemDic)
         {
-            track.Remove(item.Value.root);
+            trackStyle.DeleteItem(item.Value.itemStyle.root);
         }
 
         trackItemDic.Clear();
         if (AbilityEditorWindow.Instance.SkillConfig == null) return;
 
         // 根据数据绘制TrackItem
-        foreach (var item in AbilityEditorWindow.Instance.SkillConfig.SkillAnimationData.FrameData)
+        foreach (var item in AnimationData.FrameData)
         {
             CreateItem(item.Key, item.Value);
         }
@@ -50,7 +48,7 @@ public class AnimationTrack : SkillTrackBase
     private void CreateItem(int frameIndex, SkillAnimationEvent skillAnimationEvent)
     {
         AnimationTrackItem trackItem = new AnimationTrackItem();
-        trackItem.Init(this, track, frameIndex, frameWidth, skillAnimationEvent);
+        trackItem.Init(this, trackStyle, frameIndex, frameWidth, skillAnimationEvent);
         trackItemDic.Add(frameIndex, trackItem);
     }
 
@@ -177,8 +175,7 @@ public class AnimationTrack : SkillTrackBase
         AnimationData.FrameData.Remove(frameIndex);
         if (trackItemDic.Remove(frameIndex, out AnimationTrackItem item))
         {
-            // trackStyle.DeleteItem(item.itemStyle.root);
-            track.Remove(item.root);
+            trackStyle.DeleteItem(item.itemStyle.root);
         }
 
         AbilityEditorWindow.Instance.SaveConfig();
