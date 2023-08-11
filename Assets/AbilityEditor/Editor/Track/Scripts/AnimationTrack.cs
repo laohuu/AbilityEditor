@@ -165,4 +165,16 @@ public class AnimationTrack : SkillTrackBase
             AbilityEditorWindow.Instance.SaveConfig();
         }
     }
+
+    public override void DeleteTrackItem(int frameIndex)
+    {
+        AnimationData.FrameData.Remove(frameIndex);
+        if (trackItemDic.Remove(frameIndex, out AnimationTrackItem item))
+        {
+            // trackStyle.DeleteItem(item.itemStyle.root);
+            item.Delete();
+        }
+
+        AbilityEditorWindow.Instance.SaveConfig();
+    }
 }

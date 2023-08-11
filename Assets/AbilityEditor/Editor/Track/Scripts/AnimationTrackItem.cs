@@ -4,19 +4,23 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-public class AnimationTrackItem : TrackItemBase
+public class AnimationTrackItem : TrackItemBase<AnimationTrack>
 {
     private const string trackItemAssetPath =
         "Assets/AbilityEditor/Editor/Track/Assets/AnimationTrack/AnimationTrackItem.uxml";
 
     private AnimationTrack animationTrack;
-    private int frameIndex;
-    private float frameUnitWidth;
     private SkillAnimationEvent animationEvent;
 
-    public Label root { get; private set; }
+    public SkillAnimationEvent AnimationEvent
+    {
+        get => animationEvent;
+    }
+
     private VisualElement mainDragArea;
     private VisualElement animationOverLine;
+
+    private VisualElement _parent;
 
     public void Init(AnimationTrack animationTrack, VisualElement parent, int startFrameIndex, float frameUnitWidth,
         SkillAnimationEvent animationEvent)
@@ -25,6 +29,8 @@ public class AnimationTrackItem : TrackItemBase
         this.frameIndex = startFrameIndex;
         this.animationTrack = animationTrack;
         this.animationEvent = animationEvent;
+        track = animationTrack;
+        _parent = parent;
 
         normalColor = new Color(0.388f, 0.850f, 0.905f, 0.5f);
         selectColor = new Color(0.388f, 0.850f, 0.905f, 1f);
@@ -33,6 +39,8 @@ public class AnimationTrackItem : TrackItemBase
         mainDragArea = root.Q<VisualElement>("Main");
         animationOverLine = root.Q<VisualElement>("OverLline");
         parent.Add(root);
+
+        OnUnSelect();
 
         // 绑定事件
         mainDragArea.RegisterCallback<MouseDownEvent>(MouseDown);
@@ -43,7 +51,7 @@ public class AnimationTrackItem : TrackItemBase
         ResetView(frameUnitWidth);
     }
 
-    public void ResetView(float frameUnitWidth)
+    public override void ResetView(float frameUnitWidth)
     {
         this.frameUnitWidth = frameUnitWidth;
         root.text = animationEvent.AnimationClip.name;
@@ -80,8 +88,7 @@ public class AnimationTrackItem : TrackItemBase
         startDargPosX = evt.mousePosition.x;
         startDragFrameIndex = frameIndex;
         mouseDrag = true;
-        // Select();
-        root.style.backgroundColor = selectColor;
+        Select();
     }
 
     private void MouseUp(MouseUpEvent evt)
@@ -94,7 +101,6 @@ public class AnimationTrackItem : TrackItemBase
     {
         if (mouseDrag) ApplyDrag();
         mouseDrag = false;
-        root.style.backgroundColor = normalColor;
     }
 
     private void MouseMove(MouseMoveEvent evt)
@@ -138,6 +144,11 @@ public class AnimationTrackItem : TrackItemBase
         {
             animationTrack.SetFrameIndex(startDragFrameIndex, frameIndex);
         }
+    }
+
+    public void Delete()
+    {
+        _parent.Remove(root);
     }
 
     #endregion

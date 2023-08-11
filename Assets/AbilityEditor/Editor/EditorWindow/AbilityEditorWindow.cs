@@ -536,5 +536,11 @@ public class AbilityEditorWindow : EditorWindow
         contentListView.style.width = skillEditorConfig.frameUnitWidth * CurrentFrameCount;
     }
 
+    public void ShowTrackItemOnInspector(TrackItemBase trackItem, SkillTrackBase track)
+    {
+        SkillEditorInspector.SetTrackItem(trackItem, track);
+        Selection.activeObject = this;
+    }
+
     #endregion
 }

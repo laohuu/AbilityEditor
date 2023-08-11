@@ -33,4 +33,8 @@ public abstract class SkillTrackBase
     {
         this.frameWidth = frameWdith;
     }
+
+    public virtual void DeleteTrackItem(int frameIndex)
+    {
+    }
 }
