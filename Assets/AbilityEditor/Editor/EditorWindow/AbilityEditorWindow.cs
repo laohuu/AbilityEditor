@@ -48,6 +48,11 @@ public class AbilityEditorWindow : EditorWindow
             CurrentFrameCount = 100;
         }
 
+        if (m_CurrentPreviewCharacterPrefab != null)
+        {
+            m_PreviewCharacterPrefabObjectField.value = m_CurrentPreviewCharacterPrefab;
+        }
+
         CurrentSelectFrameIndex = 0;
     }
 
@@ -548,6 +553,7 @@ public class AbilityEditorWindow : EditorWindow
     private void UpdateContentSize()
     {
         contentListView.style.width = skillEditorConfig.frameUnitWidth * CurrentFrameCount;
+        ResetTrack();
     }
 
     public void ShowTrackItemOnInspector(TrackItemBase trackItem, SkillTrackBase track)
