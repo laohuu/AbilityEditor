@@ -24,17 +24,25 @@ public abstract class SkillTrackBase
         trackParent.Add(track);
     }
 
-    public virtual void RestView()
+    public virtual void ResetView()
     {
-        RestView(frameWidth);
+        ResetView(frameWidth);
     }
 
-    public virtual void RestView(float frameWdith)
+    public virtual void ResetView(float frameWdith)
     {
         this.frameWidth = frameWdith;
     }
 
     public virtual void DeleteTrackItem(int frameIndex)
+    {
+    }
+
+    public virtual void OnConfigChanged()
+    {
+    }
+
+    public virtual void TickView(int frameIndex)
     {
     }
 }

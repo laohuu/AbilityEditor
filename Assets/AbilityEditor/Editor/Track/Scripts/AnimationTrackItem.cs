@@ -20,8 +20,6 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
     private VisualElement mainDragArea;
     private VisualElement animationOverLine;
 
-    private VisualElement _parent;
-
     public void Init(AnimationTrack animationTrack, VisualElement parent, int startFrameIndex, float frameUnitWidth,
         SkillAnimationEvent animationEvent)
     {
@@ -30,7 +28,6 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
         this.animationTrack = animationTrack;
         this.animationEvent = animationEvent;
         track = animationTrack;
-        _parent = parent;
 
         normalColor = new Color(0.388f, 0.850f, 0.905f, 0.5f);
         selectColor = new Color(0.388f, 0.850f, 0.905f, 1f);
@@ -143,12 +140,13 @@ public class AnimationTrackItem : TrackItemBase<AnimationTrack>
         if (startDragFrameIndex != frameIndex)
         {
             animationTrack.SetFrameIndex(startDragFrameIndex, frameIndex);
+            SkillEditorInspector.Instance.SetTrackItemFrameIndex(frameIndex);
         }
     }
 
-    public void Delete()
+    public override void OnConfigChanged()
     {
-        _parent.Remove(root);
+        animationEvent = track.AnimationData.FrameData[frameIndex];
     }
 
     #endregion

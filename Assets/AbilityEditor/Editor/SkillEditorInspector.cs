@@ -60,6 +60,11 @@ public class SkillEditorInspector : Editor
 
     private int trackItemFrameIndex;
 
+    public void SetTrackItemFrameIndex(int trackItemFrameIndex)
+    {
+        this.trackItemFrameIndex = trackItemFrameIndex;
+    }
+
     private Label clipFrameLabel;
     private Toggle rootMotionToggle;
     private Label isLoopLable;

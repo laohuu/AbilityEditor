@@ -66,6 +66,11 @@ public class AbilityEditorWindow : EditorWindow
     private GameObject m_CurrentPreviewCharacterPrefab;
     private GameObject m_CurrentPreviewCharacterObj;
 
+    public GameObject PreviewCharacterObj
+    {
+        get => m_CurrentPreviewCharacterObj;
+    }
+
     private void InitTopMenu()
     {
         m_LoadSceneBtn = rootVisualElement.Q<Button>("LoadSceneBtn");
@@ -127,7 +132,6 @@ public class AbilityEditorWindow : EditorWindow
             m_CurrentPreviewCharacterObj =
                 Instantiate(evt.newValue as GameObject, Vector3.zero, Quaternion.identity, parent);
             m_CurrentPreviewCharacterObj.transform.localRotation = Quaternion.Euler(0, 0, 0);
-            // PreviewCharacterObjectField.value = currentPreviewCharacterObj;
         }
     }
 
@@ -172,10 +176,10 @@ public class AbilityEditorWindow : EditorWindow
     private void ResetTrackData()
     {
         // 重新引用一下数据
-        // for (int i = 0; i < trackList.Count; i++)
-        // {
-        //     // trackList[i].OnConfigChanged();
-        // }
+        for (int i = 0; i < trackList.Count; i++)
+        {
+            trackList[i].OnConfigChanged();
+        }
     }
 
     #endregion
@@ -198,6 +202,7 @@ public class AbilityEditorWindow : EditorWindow
             currentSelectFrameIndex = Mathf.Clamp(value, 0, CurrentFrameCount);
             CurrentFrameField.value = currentSelectFrameIndex;
             UpdateTimerShaftView();
+            TickSkill();
         }
     }
 
@@ -396,23 +401,21 @@ public class AbilityEditorWindow : EditorWindow
 
     private void Update()
     {
-        if (IsPlaying)
+        if (!IsPlaying) return;
+        // 得到时间差
+        float time = (float)DateTime.Now.Subtract(startTime).TotalSeconds;
+
+        // 确定时间轴的帧率
+        float frameRote;
+        if (m_SkillConfig != null) frameRote = m_SkillConfig.FrameRote;
+        else frameRote = skillEditorConfig.defaultFrameRote;
+
+        // 根据时间差计算当前的选中帧
+        CurrentSelectFrameIndex = (int)((time * frameRote) + startFrameIndex);
+        // 到达最后一帧自动暂停
+        if (CurrentSelectFrameIndex == CurrentFrameCount)
         {
-            // 得到时间差
-            float time = (float)DateTime.Now.Subtract(startTime).TotalSeconds;
-
-            // 确定时间轴的帧率
-            float frameRote;
-            if (m_SkillConfig != null) frameRote = m_SkillConfig.FrameRote;
-            else frameRote = skillEditorConfig.defaultFrameRote;
-
-            // 根据时间差计算当前的选中帧
-            CurrentSelectFrameIndex = (int)((time * frameRote) + startFrameIndex);
-            // 到达最后一帧自动暂停
-            if (CurrentSelectFrameIndex == CurrentFrameCount)
-            {
-                IsPlaying = false;
-            }
+            IsPlaying = false;
         }
     }
 
@@ -421,10 +424,10 @@ public class AbilityEditorWindow : EditorWindow
         // 驱动技能表现
         if (m_SkillConfig != null && m_CurrentPreviewCharacterObj != null)
         {
-            // for (int i = 0; i < trackList.Count; i++)
-            // {
-            //     trackList[i].TickView(currentSelectFrameIndex);
-            // }
+            for (int i = 0; i < trackList.Count; i++)
+            {
+                trackList[i].TickView(currentSelectFrameIndex);
+            }
         }
     }
 
@@ -520,7 +523,7 @@ public class AbilityEditorWindow : EditorWindow
     {
         for (int i = 0; i < trackList.Count; i++)
         {
-            trackList[i].RestView(skillEditorConfig.frameUnitWidth);
+            trackList[i].ResetView(skillEditorConfig.frameUnitWidth);
         }
     }
 

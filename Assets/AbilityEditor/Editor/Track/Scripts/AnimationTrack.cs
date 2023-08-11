@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
@@ -24,12 +25,12 @@ public class AnimationTrack : SkillTrackBase
         base.Init(menuParent, trackParent, frameUnitWidth);
         track.RegisterCallback<DragUpdatedEvent>(OnDragUpdate);
         track.RegisterCallback<DragExitedEvent>(DragExited);
-        RestView();
+        ResetView();
     }
 
-    public override void RestView(float frameWdith)
+    public override void ResetView(float frameWdith)
     {
-        base.RestView(frameWdith);
+        base.ResetView(frameWdith);
         // 销毁当前已有
         foreach (var item in trackItemDic)
         {
@@ -42,10 +43,15 @@ public class AnimationTrack : SkillTrackBase
         // 根据数据绘制TrackItem
         foreach (var item in AbilityEditorWindow.Instance.SkillConfig.SkillAnimationData.FrameData)
         {
-            AnimationTrackItem trackItem = new AnimationTrackItem();
-            trackItem.Init(this, track, item.Key, frameWdith, item.Value);
-            trackItemDic.Add(item.Key, trackItem);
+            CreateItem(item.Key, item.Value);
         }
+    }
+
+    private void CreateItem(int frameIndex, SkillAnimationEvent skillAnimationEvent)
+    {
+        AnimationTrackItem trackItem = new AnimationTrackItem();
+        trackItem.Init(this, track, frameIndex, frameWidth, skillAnimationEvent);
+        trackItemDic.Add(frameIndex, trackItem);
     }
 
 
@@ -124,8 +130,8 @@ public class AnimationTrack : SkillTrackBase
                     animationEvent);
                 AbilityEditorWindow.Instance.SaveConfig();
 
-                // 同步修改编辑器视图
-                RestView();
+                // 创建一个新的Item
+                CreateItem(selectFrameIndex, animationEvent);
             }
         }
     }
@@ -172,9 +178,69 @@ public class AnimationTrack : SkillTrackBase
         if (trackItemDic.Remove(frameIndex, out AnimationTrackItem item))
         {
             // trackStyle.DeleteItem(item.itemStyle.root);
-            item.Delete();
+            track.Remove(item.root);
         }
 
         AbilityEditorWindow.Instance.SaveConfig();
+    }
+
+    public override void OnConfigChanged()
+    {
+        foreach (var item in trackItemDic.Values)
+        {
+            item.OnConfigChanged();
+        }
+    }
+
+    public override void TickView(int frameIndex)
+    {
+        GameObject previewGameObject = AbilityEditorWindow.Instance.PreviewCharacterObj;
+        Animator animator = previewGameObject.GetComponent<Animator>();
+        // 根据帧找到目前是哪个动画
+        Dictionary<int, SkillAnimationEvent> frameData = AnimationData.FrameData;
+
+        Vector3 rootMositionTotalPosition = Vector3.zero;
+        // // 利用有序字典数据结构来达到有序计算的目的
+        // SortedDictionary<int, SkillAnimationEvent> frameDataSortedDic =
+        //     new SortedDictionary<int, SkillAnimationEvent>(frameData);
+        // int[] keys = frameDataSortedDic.Keys.ToArray();
+        // for (int i = 0; i < keys.Length; i++)
+        // {
+        //     int key = keys[i];
+        //     SkillAnimationEvent animationEvent = frameDataSortedDic[key];
+        // }
+
+        // 找到距离这一帧左边最近的一个动画，也就是当前要播放的动画
+        int currentOffset = int.MaxValue; // 最近的索引距离当前选中帧的差距
+        int animationEventIndex = -1;
+        foreach (var item in frameData)
+        {
+            int tempOffset = frameIndex - item.Key;
+            if (tempOffset > 0 && tempOffset < currentOffset)
+            {
+                currentOffset = tempOffset;
+                animationEventIndex = item.Key;
+            }
+        }
+
+        if (animationEventIndex != -1)
+        {
+            SkillAnimationEvent animationEvent = frameData[animationEventIndex];
+            // 动画资源总帧数
+            float clipFrameCount = animationEvent.AnimationClip.length * animationEvent.AnimationClip.frameRate;
+            // 计算当前的播放进度
+            float progress = currentOffset / clipFrameCount;
+            // 循环动画的处理
+            if (progress > 1 && animationEvent.AnimationClip.isLooping)
+            {
+                progress -= (int)progress; // 只留小数部分
+            }
+
+            animator.applyRootMotion = animationEvent.ApplyRootMotion;
+            animationEvent.AnimationClip.SampleAnimation(previewGameObject,
+                progress * animationEvent.AnimationClip.length);
+        }
+
+        previewGameObject.transform.position = rootMositionTotalPosition;
     }
 }
