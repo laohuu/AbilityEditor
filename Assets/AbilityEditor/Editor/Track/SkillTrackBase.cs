@@ -17,7 +17,7 @@ public abstract class SkillTrackBase
     {
         this.menuParent = menuParent;
         this.trackParent = trackParent;
-        this.frameWidth = frameWidth;
+        this.frameWidth = frameUnitWidth;
         menu = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(MenuAssetPath).Instantiate().Query().ToList()[1];
         menuParent.Add(menu);
         track = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(TrackAssetPath).Instantiate().Query().ToList()[1];

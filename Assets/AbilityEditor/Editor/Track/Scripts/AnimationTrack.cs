@@ -14,6 +14,11 @@ public class AnimationTrack : SkillTrackBase
 
     private Dictionary<int, AnimationTrackItem> trackItemDic = new Dictionary<int, AnimationTrackItem>();
 
+    public SkillAnimationData AnimationData
+    {
+        get => AbilityEditorWindow.Instance.SkillConfig.SkillAnimationData;
+    }
+
     public override void Init(VisualElement menuParent, VisualElement trackParent, int frameUnitWidth)
     {
         base.Init(menuParent, trackParent, frameUnitWidth);
@@ -119,8 +124,45 @@ public class AnimationTrack : SkillTrackBase
                     animationEvent);
                 AbilityEditorWindow.Instance.SaveConfig();
 
-                // TODO:同步修改编辑器视图
+                // 同步修改编辑器视图
+                RestView();
             }
+        }
+    }
+
+    public bool CheckFrameIndexOnDrag(int targetIndex, int selfIndex, bool isLeft)
+    {
+        foreach (var item in AbilityEditorWindow.Instance.SkillConfig.SkillAnimationData.FrameData)
+        {
+            // 规避拖拽时考虑自身
+            if (item.Key == selfIndex) continue;
+
+            // 向左移动 && 原先在其右边 && 目标没有重叠
+            if (isLeft && selfIndex > item.Key && targetIndex < item.Key + item.Value.DurationFrame)
+            {
+                return false;
+            }
+            // 向右移动 && 原先在其左边 && 目标没有重叠
+            else if (!isLeft && selfIndex < item.Key && targetIndex > item.Key)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// 将oldIndex的数据变为newIndex
+    /// </summary>
+    public void SetFrameIndex(int oldIndex, int newIndex)
+    {
+        if (AnimationData.FrameData.Remove(oldIndex, out SkillAnimationEvent animationEvent))
+        {
+            AnimationData.FrameData.Add(newIndex, animationEvent);
+            trackItemDic.Remove(oldIndex, out AnimationTrackItem animationTrackItem);
+            trackItemDic.Add(newIndex, animationTrackItem);
+            AbilityEditorWindow.Instance.SaveConfig();
         }
     }
 }

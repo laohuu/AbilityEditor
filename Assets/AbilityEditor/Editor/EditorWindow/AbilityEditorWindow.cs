@@ -46,6 +46,8 @@ public class AbilityEditorWindow : EditorWindow
         {
             CurrentFrameCount = 100;
         }
+
+        CurrentSelectFrameIndex = 0;
     }
 
     #region TopMenu

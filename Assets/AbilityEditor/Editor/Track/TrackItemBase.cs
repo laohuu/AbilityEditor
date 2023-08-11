@@ -5,4 +5,6 @@ using UnityEngine;
 
 public abstract class TrackItemBase
 {
+    protected Color normalColor;
+    protected Color selectColor;
 }
