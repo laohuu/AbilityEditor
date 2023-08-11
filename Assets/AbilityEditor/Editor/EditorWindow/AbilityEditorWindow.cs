@@ -23,6 +23,7 @@ public class AbilityEditorWindow : EditorWindow
 
     public void CreateGUI()
     {
+        SkillConfig.SetValidateAction(ResetView);
         Instance = this;
 
         // Each editor window contains a root VisualElement object
@@ -48,6 +49,16 @@ public class AbilityEditorWindow : EditorWindow
         }
 
         CurrentSelectFrameIndex = 0;
+    }
+
+    private void ResetView()
+    {
+        //ResetTrackData();
+        //UpdateContentSize();
+        //ResetTrack();
+        SkillConfig tempSkillConfig = m_SkillConfig;
+        m_SkillConfigObjectField.value = null;
+        m_SkillConfigObjectField.value = m_SkillConfig;
     }
 
     #region TopMenu
